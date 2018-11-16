@@ -1,0 +1,41 @@
+#URL: https://fakerql.com/
+#ENDPOINT: https://fakerql.com/graphql
+#USEFUL: https://gist.github.com/craigbeck/b90915d49fda19d5b2b17ead14dcd6da
+
+
+
+query {
+  __schema{
+    types{
+      fields{
+        name
+      }
+    }
+  }
+}
+
+query IntrospectionQuery {
+  query{
+  __schema{
+    types{
+      fields{
+        name
+      }
+    }
+  }
+}
+
+
+query {
+  __type(name:"FIELD_NAME"){
+    fields{
+      name
+    }
+  }
+}
+
+
+
+
+
+

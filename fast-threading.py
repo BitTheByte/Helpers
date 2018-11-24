@@ -28,7 +28,6 @@ class Threader:
 
 
 	def put(self,target,args):
-
 		if self.q.qsize() < self.pool_size:
 			self.q.put(threading.Thread(target=target,args=tuple(args)))
 

@@ -11,9 +11,16 @@ class Threader:
 		thread.daemon=True
 		thread.start()
 
+	def __name(self):
+		return "CUSTOM+THREAD"
+
 	def __wait(self):
-		while len(threading.enumerate()) > 1:
-			pass
+		while 1:
+			running = threading.enumerate()
+			remain = [x.name for x in running if self.__name() in x.name]
+			if len(remain) == 0:
+				break
+
 
 	def on_waiting(self):
 		return self.q.qsize()
@@ -29,8 +36,32 @@ class Threader:
 
 	def put(self,target,args):
 		if self.q.qsize() < self.pool_size:
-			self.q.put(threading.Thread(target=target,args=tuple(args)))
+			self.q.put(threading.Thread(target=target,name=self.__name(),args=tuple(args)))
 
 		if self.q.qsize() >= self.pool_size:
 			for _ in xrange(self.q.qsize()): self.__t()
 			self.__wait()
+
+
+""" USAGE EXAMPLE
+
+import time
+from random import randint
+
+def worker(x):
+	time.sleep(randint(1,3))
+	print "worker({0}) finished\n".format(x),
+
+
+t = Threader(3)
+print "starting workers 1"
+t.put(worker,["1"])
+t.put(worker,["2"])
+t.put(worker,["3"])
+
+trint "starting workers 2"
+t.put(worker,["4"])
+t.put(worker,["5"])
+t.put(worker,["6"])
+
+"""

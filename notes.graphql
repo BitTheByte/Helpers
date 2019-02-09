@@ -36,6 +36,8 @@ query {
 
 
 
+# Fast dump
 
+{"operationName":"","variables":{},"query":"query IntrospectionQuery  {\n  __schema {\n types{\nfields{name,type{name,kind},description,args{type{name,kind},name,defaultValue},isDeprecated,deprecationReason}}\n}\n}\n"}
 
 

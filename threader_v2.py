@@ -17,8 +17,8 @@ class Channel(object):
         self.__stop = True
         sys.exit(0)
 
-    def append(self,item):
-        self.__items.append(item)
+    def append(self,*items):
+        self.__items.append(items)
 
     def pop(self):
         try:
@@ -54,7 +54,7 @@ def _worker(wid,target,channel,callback=None):
                 callback(result(wid= wid, channel= channel,
                             func    = target,
                             args    = args,
-                            ret     = target(args),
+                            ret     = target(*args),
                         ))
 
 def workers(target,channel,count=5,callback=None):
@@ -65,17 +65,17 @@ def workers(target,channel,count=5,callback=None):
 # Example 
 mychannel = Channel() # Channel for sending function arguments 
 
-def hello_world(num):
+def hello_world(num1,num2):
     time.sleep(2)
-    return num * 5
+    return num1 * num2
 
 def on_finish(result):
     ret = result.ret
     arg = result.args
-    print("Hello(%s) returned: %s\n" % (arg,ret),end='')
+    print("Hello%s returned: %s\n" % (arg,ret),end='')
 
-mychannel.append(10)       # channels could be initialized before workers
-mychannel.append(20)       # channels could be initialized before workers                                                                  
+mychannel.append(10,2)       # channels could be initialized before workers
+mychannel.append(20,3)       # channels could be initialized before workers                                                                  
                                                                   
 workers(                                                                  
     target   = hello_world,    # function pointer
@@ -84,8 +84,8 @@ workers(
     callback = on_finish       # callback funtion which get executed on every target function finished                                               
 )        
                                                                   
-mychannel.append(30)      # channels could be populated while the workers are running
-mychannel.append(40)      # channels could be populated while the workers are running
+mychannel.append(30,4)      # channels could be populated while the workers are running
+mychannel.append(40,5)      # channels could be populated while the workers are running
 
 mychannel.wait()         # waiting workers to finish everything
 mychannel.close()        # channel signal to shutdown workers 

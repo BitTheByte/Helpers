@@ -21,9 +21,10 @@ class Channel(object):
         self.__items.append(item)
 
     def pop(self):
-        if len(self.__items) > 0:
+        try:
             return True, self.__items.pop(0)
-        return False, None
+        except IndexError:
+            return False, None
 
     def __str__(self):
         return str(self.__items)

@@ -12,6 +12,7 @@ class Channel(object):
         self.__stop = False
         self.__items = []
         self._jobs = 0
+        self.__lock = threading.Lock()
         #signal.signal(signal.SIGINT, self.signal_handler)
 
     def signal_handler(self,sig,frame):
@@ -19,7 +20,7 @@ class Channel(object):
         sys.exit(0)
 
     def append(self,*items):
-        self._jobs += 1
+        with self.__lock: self._jobs += 1
         self.__items.append(items)
 
     def pop(self):
@@ -39,6 +40,7 @@ class Channel(object):
 
     def wait(self):
         while self._jobs > 0:
+            print(self._jobs, self.__items, self.name)
             time.sleep(0.1)
 
     def close(self):
@@ -57,16 +59,16 @@ def _worker(wid,target,channel,lock,callback=None):
                 with lock: channel._jobs -= 1
             except Exception as e:
                 with lock: channel._jobs -= 1
+                val = None
                 print(e)
 
             if type(callback) == types.FunctionType:
                 callback(result(wid= wid, channel= channel,
-                            func    = target,
-                            args    = args,
-                            ret     = val,
+                            func   = target,
+                            args   = args,
+                            ret    = val,
                         ))
 
 def workers(target,channel,count=5,callback=None):
-    lock = threading.Lock()
     for _id in range(1,count+1):
-        threading.Thread(target=_worker,args=(_id,target,channel,lock,callback,)).start()
+        threading.Thread(target=_worker,args=(_id,target,channel,threading.Lock(),callback,)).start()

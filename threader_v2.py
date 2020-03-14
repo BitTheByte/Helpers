@@ -40,7 +40,6 @@ class Channel(object):
 
     def wait(self):
         while self._jobs > 0:
-            print(self._jobs, self.__items, self.name)
             time.sleep(0.1)
 
     def close(self):

@@ -47,27 +47,38 @@ class Channel(object):
 
 
 result = namedtuple("Result","func ret args channel wid")
-
-def _worker(wid,target,channel,lock,callback=None):
+cache  = {}
+def _worker(wid,target,channel,jlock,clock,callback=None):
     while( channel.open() ):
             ok, args = channel.pop()
             if not ok: time.sleep(0.50); continue
 
             try:
-                val = target(*args)
-                with lock: channel._jobs -= 1
+                if not target in cache.keys():
+                   cache[target] = {}
+
+                if args in cache[target].keys():
+                    return_value = cache[target][args]
+                else:
+                    return_value = target(*args)
+
+                with clock: cache.update({target:{args: return_value}})
+
             except Exception as e:
-                with lock: channel._jobs -= 1
-                val = None
+                with clock: cache.update({target:{args: None}})
                 print(e)
+            
+            with jlock: channel._jobs -= 1
 
             if type(callback) == types.FunctionType:
                 callback(result(wid= wid, channel= channel,
                             func   = target,
                             args   = args,
-                            ret    = val,
+                            ret    = return_value,
                         ))
 
 def workers(target,channel,count=5,callback=None):
+    jlock = threading.Lock()
+    clock = threading.Lock()
     for _id in range(1,count+1):
-        threading.Thread(target=_worker,args=(_id,target,channel,threading.Lock(),callback,)).start()
+        threading.Thread(target=_worker,args=(_id,target,channel,jlock,clock,callback,)).start()

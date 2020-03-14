@@ -11,7 +11,7 @@ class Channel(object):
         self.name = name
         self.__stop = False
         self.__items = []
-        signal.signal(signal.SIGINT, self.signal_handler)
+        #signal.signal(signal.SIGINT, self.signal_handler)
 
     def signal_handler(self,sig,frame):
         self.__stop = True
@@ -36,7 +36,8 @@ class Channel(object):
         return not self.__stop
 
     def wait(self):
-        while len(self.__items)  > 0:
+        while len(self.__items) > 0:
+            #print(self.__items)
             time.sleep(0.1)
 
     def close(self):
@@ -50,42 +51,15 @@ def _worker(wid,target,channel,callback=None):
             ok, args = channel.pop()
             if not ok: time.sleep(0.50); continue
 
+            result = target(*args)
+
             if type(callback) == types.FunctionType:
                 callback(result(wid= wid, channel= channel,
                             func    = target,
                             args    = args,
-                            ret     = target(*args),
+                            ret     = result,
                         ))
 
 def workers(target,channel,count=5,callback=None):
     for _id in range(1,count+1):
         threading.Thread(target=_worker,args=(_id,target,channel,callback,)).start()
-
-
-# Example 
-mychannel = Channel() # Channel for sending function arguments 
-
-def hello_world(num1,num2):
-    time.sleep(2)
-    return num1 * num2
-
-def on_finish(result):
-    ret = result.ret
-    arg = result.args
-    print("Hello%s returned: %s\n" % (arg,ret),end='')
-
-mychannel.append(10,2)       # channels could be initialized before workers
-mychannel.append(20,3)       # channels could be initialized before workers                                                                  
-                                                                  
-workers(                                                                  
-    target   = hello_world,    # function pointer
-    channel  = mychannel,      # array which contains arguments                                           
-    count    = 2,              # number of simultaneous runs of the target function
-    callback = on_finish       # callback funtion which get executed on every target function finished                                               
-)        
-                                                                  
-mychannel.append(30,4)      # channels could be populated while the workers are running
-mychannel.append(40,5)      # channels could be populated while the workers are running
-
-mychannel.wait()         # waiting workers to finish everything
-mychannel.close()        # channel signal to shutdown workers 

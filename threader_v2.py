@@ -11,6 +11,7 @@ class Channel(object):
         self.name = name
         self.__stop = False
         self.__items = []
+        self._jobs = 0
         #signal.signal(signal.SIGINT, self.signal_handler)
 
     def signal_handler(self,sig,frame):
@@ -18,6 +19,7 @@ class Channel(object):
         sys.exit(0)
 
     def append(self,*items):
+        self._jobs += 1
         self.__items.append(items)
 
     def pop(self):
@@ -36,8 +38,7 @@ class Channel(object):
         return not self.__stop
 
     def wait(self):
-        while len(self.__items) > 0:
-            #print(self.__items)
+        while self._jobs > 0:
             time.sleep(0.1)
 
     def close(self):
@@ -52,6 +53,7 @@ def _worker(wid,target,channel,callback=None):
             if not ok: time.sleep(0.50); continue
 
             result = target(*args)
+            channel._jobs -= 1
 
             if type(callback) == types.FunctionType:
                 callback(result(wid= wid, channel= channel,

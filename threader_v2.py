@@ -53,7 +53,7 @@ def _worker(wid,target,channel,lock,callback=None):
             if not ok: time.sleep(0.50); continue
 
             try:
-                result = target(*args)
+                val = target(*args)
                 with lock: channel._jobs -= 1
             except Exception as e:
                 with lock: channel._jobs -= 1
@@ -63,7 +63,7 @@ def _worker(wid,target,channel,lock,callback=None):
                 callback(result(wid= wid, channel= channel,
                             func    = target,
                             args    = args,
-                            ret     = result,
+                            ret     = val,
                         ))
 
 def workers(target,channel,count=5,callback=None):

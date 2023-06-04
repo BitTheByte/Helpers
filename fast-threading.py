@@ -18,7 +18,7 @@ class Threader:
 		while 1:
 			running = threading.enumerate()
 			remain = [x.name for x in running if self.__name() in x.name]
-			if len(remain) == 0:
+			if not remain:
 				break
 
 

@@ -49,33 +49,33 @@ class Channel(object):
 result = namedtuple("Result","func ret args channel wid")
 cache  = {}
 def _worker(wid,target,channel,jlock,clock,callback=None):
-    while( channel.open() ):
-            ok, args = channel.pop()
-            if not ok: time.sleep(0.50); continue
+    while ( channel.open() ):
+        ok, args = channel.pop()
+        if not ok: time.sleep(0.50); continue
 
-            try:
-                if not target in cache.keys():
-                   cache[target] = {}
+        try:
+            if target not in cache.keys():
+                cache[target] = {}
 
-                if args in cache[target].keys():
-                    return_value = cache[target][args]
-                else:
-                    return_value = target(*args)
+            if args in cache[target].keys():
+                return_value = cache[target][args]
+            else:
+                return_value = target(*args)
 
-                with clock: cache.update({target:{args: return_value}})
+            with clock: cache.update({target:{args: return_value}})
 
-            except Exception as e:
-                with clock: cache.update({target:{args: None}})
-                print(e)
-            
-            with jlock: channel._jobs -= 1
+        except Exception as e:
+            with clock: cache.update({target:{args: None}})
+            print(e)
 
-            if type(callback) == types.FunctionType:
-                callback(result(wid= wid, channel= channel,
-                            func   = target,
-                            args   = args,
-                            ret    = return_value,
-                        ))
+        with jlock: channel._jobs -= 1
+
+        if type(callback) == types.FunctionType:
+            callback(result(wid= wid, channel= channel,
+                        func   = target,
+                        args   = args,
+                        ret    = return_value,
+                    ))
 
 def workers(target,channel,count=5,callback=None):
     jlock = threading.Lock()
